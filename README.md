@@ -51,14 +51,15 @@ shortcuts around it:
 
 | Rule | How |
 |---|---|
-| Tests reach only application services | `Resolve<T>() where T : IApplicationService` in [`TestBase`](tests/Shop.Tests.Base/TestBase.cs) |
+| Tests reach only application services | This project's [`TestBase`](tests/Shop.Tests/TestBase.cs) overrides the harness's `Resolve<T>()`, and fails the test when `T` is not an `IApplicationService`, and says what to do instead. [`ResolveTests`](tests/Shop.Tests/Boundaries/ResolveTests.cs) checks that it refuses the database context and the container |
 | Nothing behind them is reachable | Contracts, data and implementations are separate projects. `Shop.Api` holds the service interfaces and, in `Dto/`, what they exchange. `Shop.Data` holds the entities and the database context. `Shop` holds the internal services and managers. [`PublicSurfaceTests`](tests/Shop.Tests/Boundaries/PublicSurfaceTests.cs) fails if `Shop` exports anything but its composition root or opens its internals, or if `Shop.Api` or `Shop.Data` export anything else |
 | The container is the production one | `TestBase` boots `AddShop`, the composition root a host calls |
 | Reads come from the database | Each `Resolve<T>()` opens a new scope, as a new request would. The database is SQLite in-memory, not EF Core's InMemory provider, which is not relational |
 | Data comes from a factory, checked against the API | [`ShopFactory`](tests/Shop.Tests.Base/EntityFactory/ShopFactory.cs) is the default and preferred way to create test data. It writes entities through the database context, like a production entity factory, and is the only code that gets a context instance. [`ShopFactoryTests`](tests/Shop.Tests/EntityFactory/ShopFactoryTests.cs) compares its orders with orders placed through the API. Its products, customers and promo codes are checked by use, because the order tests place real orders with them. Data the application derives from other data, such as an order with discounts, is created through the API instead, so the application computes it |
 
-The type constraint on `Resolve<T>()` is where "only application services" stops being a convention
-and becomes a compile error.
+The shared harness keeps the plain `Resolve<T>()` of a production test base, and each test project
+decides what its tests may ask for. Here, the check in the project's `TestBase` is where "only
+application services" stops being a convention: a test that asks for anything else fails.
 
 ## Rule 2: someone other than the agent decides the right answer
 
@@ -123,8 +124,8 @@ src/Shop.Data/                   Entities and the database context. In tests, on
 src/Shop/                        Internal implementations (Services/) and rules (Managers/)
 tests/Shop.Tests.Base/           The harness: TestBase, ShopFactory, ShouldlyExtensions, ResourceHelper
 tests/Shop.Tests/                The tests, the provider's payload fixtures
-tests/Shop.Tests/TestBase.cs     This project's TestBase: the harness, plus helpers only these tests need
-tests/Shop.Tests/Boundaries/     Public surface and fixture provenance checks
+tests/Shop.Tests/TestBase.cs     This project's TestBase: the Resolve rule, and helpers only these tests need
+tests/Shop.Tests/Boundaries/     Resolve, public surface and fixture provenance checks
 tests/Shop.Tests/EntityFactory/  Checks the factory against the API
 Imports.Tests.cs                 Global usings, linked into both test projects
 ```

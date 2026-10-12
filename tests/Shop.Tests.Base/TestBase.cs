@@ -1,13 +1,13 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Shop.Api;
 using Shop.Tests.EntityFactory;
 
 namespace Shop.Tests.Base
 {
     /// <summary>
-    /// Boots the application's own composition root over a private in-memory SQLite database, and hands out application services only.
+    /// Boots the application's own composition root over a private in-memory SQLite database.
+    /// Each test project's <c>TestBase</c> derives from it, and decides which services its tests may resolve.
     /// </summary>
     /// <remarks>
     /// Every <see cref="Resolve{T}"/> opens a new scope, as a new request would. So a read goes to the database, not to a context that still holds the entity.
@@ -46,11 +46,9 @@ namespace Shop.Tests.Base
         }
 
         /// <summary>
-        /// An application service, from a new scope. The constraint is the boundary: a test cannot ask
-        /// for the service provider, a database context, or anything else that is not an entry point.
+        /// A service from a new scope. A test project's <c>TestBase</c> overrides it to limit what its tests may ask for.
         /// </summary>
-        protected T Resolve<T>()
-            where T : IApplicationService
+        protected virtual T Resolve<T>()
         {
             var scope = _serviceProvider.CreateScope();
 

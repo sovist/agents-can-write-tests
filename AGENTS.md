@@ -33,9 +33,9 @@ code agrees with your reading.
 
 ### Go through the harness
 
-- Inherit this project's `TestBase`. It derives from the harness in `Shop.Tests.Base`, and holds
-  helpers only this project's tests need. Get services only with `Resolve<T>()`; it accepts
-  application services and nothing else.
+- Inherit this project's `TestBase`, never `Shop.Tests.Base.TestBase` directly. It holds the rule for
+  what tests may resolve, and helpers only this project's tests need. Get services only with
+  `Resolve<T>()`. It hands out application services, and fails the test when asked for anything else.
 - Create test data with `ShopFactory.Create...` by default. Never write rows yourself. If the factory
   lacks what you need, add a `Create...` method to it.
 - When the data is something the application derives from other data, such as an order with
