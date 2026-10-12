@@ -2,27 +2,88 @@
 
 [![CI](https://github.com/sovist/agents-can-write-tests/actions/workflows/ci.yml/badge.svg)](https://github.com/sovist/agents-can-write-tests/actions/workflows/ci.yml)
 
-They can, as long as the expected values come from somewhere other than the agent's own reading of
-the ticket.
+They can, when the repo makes two things true: the cheapest test to write tells a user story, and the
+expected values come from somewhere other than the agent's own reading of the ticket.
 
 When one agent writes both the code and its tests, a passing test can mean two things: the code is
-right, or the test was derived from the same reading as the code. This repo is a small, runnable
-.NET example of telling the two apart.
+right, or the test checks the code against itself. That happens in two ways, and each needs its own
+rule:
 
-A test ends up checking the code against itself in one of two ways, and each needs a different fix:
-
-| | How it happens | What stops it |
+| | How the test checks the code against itself | The rule that stops it |
 |---|---|---|
-| **Mock tautology** | The test stubs a collaborator, then asserts what it told the stub to return. | A harness that boots the real container and database, and hands out only application services. |
-| **Interpretation tautology** | The expected value comes from the same reading of the ticket that produced the code. | Expected values fixed outside that reading: examples a person confirmed, payloads from the other system's documentation. |
+| **Mock tautology** | The test stubs a collaborator, then asserts what it told the stub to return. | **1. A test tells a user story.** A harness that boots the real container and database, and hands out only application services, makes that the cheapest test to write. |
+| **Interpretation tautology** | The expected value comes from the same reading of the ticket that produced the code. | **2. Expected values come from outside the agent.** Examples a person confirmed, and payloads from the other system's documentation. |
 
-A strict harness solves the first and cannot touch the second. Both fixes are here, and so is the
-gap between them, checked by CI.
+Neither rule is enough on its own. The harness can't tell whether the agent read the ticket right.
+And a confirmed value asserted against a mock only checks the mock. This repo is a small, runnable
+.NET example of both rules, and CI shows where the first one stops and the second one takes over.
+
+## Rule 1: a test tells a user story
+
+Each test reads as something a user, or another system, does, and what they see afterwards. There is
+no mock in the suite: no mocking library is referenced, and nothing of the application's own is
+substituted.
+
+```csharp
+[Fact]
+public async Task Handle_ShouldMarkTheOrderPaid_When_ThePaymentSucceeded()
+{
+    // Arrange:
+    // A customer places an 85.50 order and pays. ExamplePay reports the amount in cents
+    var placed = await ShopFactory.CreateOrder(85.50m);
+
+    var payload = ProviderPayload.PaymentSucceeded(placed.Id);
+
+    // Act
+    var outcome = await Service.Handle(payload);
+
+    // Assert
+    outcome.ShouldBe(WebhookOutcome.Applied);
+
+    var order = await OrderService.Get(placed.Id);
+
+    order.Status.ShouldBe(OrderStatus.Paid);
+}
+```
+
+Agents take the cheapest path. The harness makes the story the cheapest test to write, and closes the
+shortcuts around it:
+
+| Rule | How |
+|---|---|
+| Tests reach only application services | `Resolve<T>() where T : class, IApplicationService` in [`TestBase`](tests/Shop.Tests.Base/TestBase.cs) |
+| Nothing behind them is reachable | Contracts, data and implementations are separate projects. `Shop.Api` holds the service interfaces and, in `Dto/`, what they exchange. `Shop.Data` holds the entities and the database context. `Shop` holds the internal services and managers. [`PublicSurfaceTests`](tests/Shop.Tests/Boundaries/PublicSurfaceTests.cs) fails if `Shop` exports anything but its composition root or opens its internals, or if `Shop.Api` or `Shop.Data` export anything else |
+| The container is the production one | `TestBase` boots `AddShop`, the composition root a host calls |
+| Reads come from the database | Each `Resolve<T>()` opens a new scope, as a new request would. The database is SQLite in-memory, not EF Core's InMemory provider, which is not relational |
+| Data comes from a factory, checked against the API | [`ShopFactory`](tests/Shop.Tests.Base/EntityFactory/ShopFactory.cs) is the default and preferred way to create test data. It writes entities through the database context, like a production entity factory, and is the only code that gets a context instance. [`ShopFactoryTests`](tests/Shop.Tests/EntityFactory/ShopFactoryTests.cs) compares its orders with orders placed through the API. Its products, customers and promo codes are checked by use, because the order tests place real orders with them. Data the application derives from other data, such as an order with discounts, is created through the API instead, so the application computes it |
+
+The type constraint on `Resolve<T>()` is where "only application services" stops being a convention
+and becomes a compile error.
+
+## Rule 2: expected values come from outside the agent
+
+The tickets are illustrations, and so is their product owner. The test runs they quote are real. The
+history shows them too: each ticket has a red commit and a green one, and checking out the red commit
+reproduces the failures its ticket records.
+
+**Confirmed examples.** Before any code, the agent restates the ticket as worked examples with
+numbers, and a person confirms or corrects them. In [ORD-2](docs/tickets/ORD-2-promo-codes.md) the
+restatement said 85.00 and the product owner said 85.50. Prose like "both discounts apply" would have
+hidden that. The tests copy the confirmed table. They were run red first, against a written
+prediction of which would fail and why, and the ticket records both.
+
+**The other side's payloads.** [ORD-3](docs/tickets/ORD-3-payment-webhook.md) handles webhooks from
+ExamplePay, a stand-in provider whose [documentation](docs/provider/examplepay-webhooks.md) lives in
+the repo. The fixtures are its examples, copied unchanged, and
+[`FixtureProvenanceTests`](tests/Shop.Tests/Boundaries/FixtureProvenanceTests.cs) fails on any fixture
+that isn't one. When the same hand writes the parser and the sample data, the test only proves that
+the two agree. That is how a parser ships green and fails on its first real event.
 
 ## See the gap
 
-Each patch in [`docs/misreads/`](docs/misreads/) introduces a plausible misread, together with the
-test an agent would write from it. Those tests follow every harness rule.
+Rule 1 can't catch a misread. Each patch in [`docs/misreads/`](docs/misreads/) introduces a plausible
+misread, together with the story test an agent would write from it. Those tests follow every harness
+rule.
 
 ```bash
 git apply docs/misreads/promo-and-loyalty.patch
@@ -42,44 +103,12 @@ differs is where the expected value came from.
 The `misreads` CI job applies each patch and fails the build if the agent's test stops passing or the
 catching tests stop failing ([`.github/misread.sh`](.github/misread.sh)).
 
-## What the harness enforces
-
-| Rule | How |
-|---|---|
-| Tests reach only application services | `Resolve<T>() where T : class, IApplicationService` in [`TestBase`](tests/Shop.Tests.Base/TestBase.cs) |
-| Nothing behind them is reachable | Contracts, data and implementations are separate projects. `Shop.Api` holds the service interfaces and, in `Dto/`, what they exchange. `Shop.Data` holds the entities and the database context. `Shop` holds the internal services and managers. [`PublicSurfaceTests`](tests/Shop.Tests/Boundaries/PublicSurfaceTests.cs) fails if `Shop` exports anything but its composition root or opens its internals, or if `Shop.Api` or `Shop.Data` export anything else |
-| The container is the production one | `TestBase` boots `AddShop`, the composition root a host calls |
-| Reads come from the database | Each `Resolve<T>()` opens a new scope, as a new request would. The database is SQLite in-memory, not EF Core's InMemory provider, which is not relational |
-| Data comes from a factory, checked against the API | [`ShopFactory`](tests/Shop.Tests.Base/EntityFactory/ShopFactory.cs) is the default and preferred way to create test data. It writes entities through the database context, like a production entity factory, and is the only code that gets a context instance. [`ShopFactoryTests`](tests/Shop.Tests/EntityFactory/ShopFactoryTests.cs) compares its orders with orders placed through the API. Its products, customers and promo codes are checked by use, because the order tests place real orders with them. Data the application derives from other data, such as an order with discounts, is created through the API instead, so the application computes it |
-
-The type constraint on `Resolve<T>()` is where "only application services" stops being a convention
-and becomes a compile error.
-
-## What fixes the expected values
-
-The tickets are illustrations, and so is their product owner. The test runs they quote are real. The
-history shows them too: each ticket has a red commit and a green one, and checking out the red commit
-reproduces the failures its ticket records.
-
-**Confirmed examples.** Before any code, the agent restates the ticket as worked examples with
-numbers, and a person confirms or corrects them. In [ORD-2](docs/tickets/ORD-2-promo-codes.md) the
-restatement said 85.00 and the product owner said 85.50. Prose like "both discounts apply" would have
-hidden that. The tests copy the confirmed table. They were run red first, against a written
-prediction of which would fail and why, and the ticket records both.
-
-**The other side's payloads.** [ORD-3](docs/tickets/ORD-3-payment-webhook.md) handles webhooks from
-ExamplePay, a stand-in provider whose [documentation](docs/provider/examplepay-webhooks.md) lives in
-the repo. The fixtures are its examples, copied unchanged, and
-[`FixtureProvenanceTests`](tests/Shop.Tests/Boundaries/FixtureProvenanceTests.cs) fails on any fixture
-that isn't one. When the same hand writes the parser and the sample data, the test only proves that
-the two agree. That is how a parser ships green and fails on its first real event.
-
 ## Use it with your agent
 
-[`AGENTS.md`](AGENTS.md) holds the rules, written as instructions an agent follows; `CLAUDE.md`
-imports it. The rules about where expected values come from carry over to any stack. The harness
-rules name this repo's types. The shape to copy: a constrained resolve, internal services, one entity
-factory checked against the API, a public surface test and a provenance test.
+[`AGENTS.md`](AGENTS.md) holds both rules, written as instructions an agent follows; `CLAUDE.md`
+imports it. The rules carry over to any stack. The harness rules name this repo's types. The shape to
+copy: a constrained resolve, internal services, one entity factory checked against the API, a public
+surface test, and a provenance test for anything another system sends.
 
 ## Layout
 
