@@ -22,19 +22,19 @@ index 54ab3e5..243296b 100644
              public string Currency { get; set; }
          }
 diff --git a/tests/Shop.Tests/Payments/Fixtures/ProviderPayload.cs b/tests/Shop.Tests/Payments/Fixtures/ProviderPayload.cs
-index e6219f1..410f712 100644
+index dd8f484..8cf4662 100644
 --- a/tests/Shop.Tests/Payments/Fixtures/ProviderPayload.cs
 +++ b/tests/Shop.Tests/Payments/Fixtures/ProviderPayload.cs
-@@ -25,6 +25,11 @@ namespace Shop.Tests.Payments.Fixtures
-             return Load("payment.failed.json", reference);
+@@ -33,6 +33,11 @@ namespace Shop.Tests.Payments.Fixtures
+             return Load("payment.failed.json", reference.ToString());
          }
  
 +        public static string SamplePayment(Guid reference)
 +        {
-+            return Load("sample-payment.json", reference);
++            return Load("sample-payment.json", reference.ToString());
 +        }
 +
-         private static string Load(string fixture, Guid reference)
+         private static string Load(string fixture, string reference)
          {
              var payload = JsonNode.Parse(typeof(ProviderPayload).GetResourceFileContent(fixture));
 diff --git a/tests/Shop.Tests/Payments/Fixtures/sample-payment.json b/tests/Shop.Tests/Payments/Fixtures/sample-payment.json

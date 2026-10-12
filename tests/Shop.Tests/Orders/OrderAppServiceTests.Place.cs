@@ -54,7 +54,11 @@ namespace Shop.Tests.Orders
             // Assert
             var order = await Service.Get(orderPlaced.Id);
 
-            (order.PromoDiscount, order.LoyaltyDiscount, order.Total).ShouldBe((promoDiscount, loyaltyDiscount, total), example);
+            order.PromoDiscount.ShouldBe(promoDiscount, example);
+
+            order.LoyaltyDiscount.ShouldBe(loyaltyDiscount, example);
+
+            order.Total.ShouldBe(total, example);
         }
 
         [Fact]
@@ -81,6 +85,52 @@ namespace Shop.Tests.Orders
                 },
                 PromoCode = "NOSUCHCODE"
             }).ShouldThrowAsync(ShopExceptionType.UnknownPromoCode);
+        }
+
+        [Fact]
+        public async Task Place_ShouldRejectTheOrder_When_TheCustomerIsUnknown()
+        {
+            // Arrange:
+            // The contract of IOrderAppService.Place: an order from a customer the shop does not know is refused
+            var product = await ShopFactory.CreateProduct(price: 100.00m);
+
+            // Act
+            // Assert
+            await Service.Place(new PlaceOrderDto
+            {
+                CustomerId = Guid.NewGuid(),
+                Lines = new List<OrderLineDto>
+                {
+                    new OrderLineDto
+                    {
+                        ProductId = product.Id,
+                        Quantity = 1
+                    }
+                }
+            }).ShouldThrowAsync(ShopExceptionType.UnknownCustomer);
+        }
+
+        [Fact]
+        public async Task Place_ShouldRejectTheOrder_When_TheProductIsUnknown()
+        {
+            // Arrange:
+            // The contract of IOrderAppService.Place: an order for a product the shop does not sell is refused
+            var customer = await ShopFactory.CreateCustomer();
+
+            // Act
+            // Assert
+            await Service.Place(new PlaceOrderDto
+            {
+                CustomerId = customer.Id,
+                Lines = new List<OrderLineDto>
+                {
+                    new OrderLineDto
+                    {
+                        ProductId = Guid.NewGuid(),
+                        Quantity = 1
+                    }
+                }
+            }).ShouldThrowAsync(ShopExceptionType.UnknownProduct);
         }
     }
 }

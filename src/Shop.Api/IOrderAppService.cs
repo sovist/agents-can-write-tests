@@ -14,6 +14,9 @@ namespace Shop.Api
         /// </summary>
         Task<OrderDto> Place(PlaceOrderDto request);
 
+        /// <summary>
+        /// Reads an order. Throws <see cref="ShopException"/> for an unknown order.
+        /// </summary>
         Task<OrderDto> Get(Guid orderId);
     }
 }

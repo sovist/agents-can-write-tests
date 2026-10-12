@@ -86,5 +86,33 @@ namespace Shop.Tests.Payments
 
             order.Status.ShouldBe(OrderStatus.AwaitingPayment);
         }
+
+        [Fact]
+        public async Task Handle_ShouldRejectThePayment_When_TheReferenceMatchesNoOrder()
+        {
+            // Arrange:
+            // ExamplePay reports a payment for an order the shop never took
+            var payload = ProviderPayload.PaymentSucceeded(Guid.NewGuid());
+
+            // Act
+            var outcome = await Service.Handle(payload);
+
+            // Assert
+            outcome.ShouldBe(WebhookOutcome.Rejected);
+        }
+
+        [Fact]
+        public async Task Handle_ShouldRejectThePayment_When_TheReferenceIsNotAnOrderId()
+        {
+            // Arrange:
+            // ExamplePay reports a payment the shop did not start: its reference is an invoice number, not an order id
+            var payload = ProviderPayload.PaymentSucceeded("INV-2041");
+
+            // Act
+            var outcome = await Service.Handle(payload);
+
+            // Assert
+            outcome.ShouldBe(WebhookOutcome.Rejected);
+        }
     }
 }

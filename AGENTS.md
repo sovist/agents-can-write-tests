@@ -27,6 +27,10 @@ code agrees with your reading.
   story, without opening the method.
 - Assert what a user can observe: what the service returns, or what a later read through a service
   shows. Never assert which method was called, or with what.
+- Assert each value with its own `ShouldBe`: `order.PromoDiscount.ShouldBe(10.00m);`, then
+  `order.Total.ShouldBe(90.00m);`. Never pack values into a tuple, such as
+  `(order.PromoDiscount, order.Total).ShouldBe((10.00m, 90.00m))`. A failure then names the one value
+  that is wrong. In a theory, pass the case label as the message: `order.Total.ShouldBe(total, example)`.
 - No mocks of the application's own code: no stubbed service, manager or database. If a test seems to
   need one, the setup belongs in `ShopFactory`, or the action belongs in a different test.
 - Substitute only what crosses the process boundary, such as another company's API.

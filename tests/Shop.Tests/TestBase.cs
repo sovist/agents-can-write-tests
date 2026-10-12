@@ -3,8 +3,8 @@ using Shop.Api;
 namespace Shop.Tests
 {
     /// <summary>
-    /// The base for this project's tests. It runs on the shared harness from <c>Shop.Tests.Base</c>,
-    /// and lets tests resolve application services only.
+    /// The base for this project's tests.
+    /// It runs on the shared harness from <c>Shop.Tests.Base</c>, and lets tests resolve application services only.
     /// Helpers that only this project's tests need go here.
     /// </summary>
     public abstract class TestBase : Shop.Tests.Base.TestBase

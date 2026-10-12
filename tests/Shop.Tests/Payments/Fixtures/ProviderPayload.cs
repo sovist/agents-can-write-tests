@@ -14,6 +14,14 @@ namespace Shop.Tests.Payments.Fixtures
         /// </summary>
         public static string PaymentSucceeded(Guid reference)
         {
+            return Load("payment.succeeded.json", reference.ToString());
+        }
+
+        /// <summary>
+        /// The documented <c>payment.succeeded</c> example, for a payment the shop did not start: its reference is not an order id.
+        /// </summary>
+        public static string PaymentSucceeded(string reference)
+        {
             return Load("payment.succeeded.json", reference);
         }
 
@@ -22,10 +30,10 @@ namespace Shop.Tests.Payments.Fixtures
         /// </summary>
         public static string PaymentFailed(Guid reference)
         {
-            return Load("payment.failed.json", reference);
+            return Load("payment.failed.json", reference.ToString());
         }
 
-        private static string Load(string fixture, Guid reference)
+        private static string Load(string fixture, string reference)
         {
             var payload = JsonNode.Parse(typeof(ProviderPayload).GetResourceFileContent(fixture));
 
@@ -36,7 +44,7 @@ namespace Shop.Tests.Payments.Fixtures
                 throw new InvalidOperationException($"{fixture} has no data.reference to replace.");
             }
 
-            data["reference"] = reference.ToString();
+            data["reference"] = reference;
 
             return payload.ToJsonString();
         }

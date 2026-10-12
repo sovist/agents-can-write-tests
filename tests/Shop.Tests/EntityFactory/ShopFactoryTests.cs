@@ -41,8 +41,15 @@ namespace Shop.Tests.EntityFactory
             var fromApi = await OrderService.Get(orderPlaced.Id);
 
             // Assert
-            (fromFactory.Subtotal, fromFactory.PromoDiscount, fromFactory.LoyaltyDiscount, fromFactory.Total, fromFactory.Status)
-                .ShouldBe((fromApi.Subtotal, fromApi.PromoDiscount, fromApi.LoyaltyDiscount, fromApi.Total, fromApi.Status));
+            fromFactory.Subtotal.ShouldBe(fromApi.Subtotal);
+
+            fromFactory.PromoDiscount.ShouldBe(fromApi.PromoDiscount);
+
+            fromFactory.LoyaltyDiscount.ShouldBe(fromApi.LoyaltyDiscount);
+
+            fromFactory.Total.ShouldBe(fromApi.Total);
+
+            fromFactory.Status.ShouldBe(fromApi.Status);
         }
     }
 }
