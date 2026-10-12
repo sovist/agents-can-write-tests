@@ -29,5 +29,16 @@ namespace Shop.Services
 
             return product.Id;
         }
+
+        public async Task AddPromoCode(string code, int percentOff)
+        {
+            _dbContext.PromoCodes.Add(new PromoCode
+            {
+                Code = code,
+                PercentOff = percentOff
+            });
+
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

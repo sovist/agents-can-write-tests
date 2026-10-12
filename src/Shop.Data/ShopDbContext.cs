@@ -11,8 +11,15 @@ namespace Shop.Data
 
         public DbSet<Product> Products { get; set; }
 
+        public DbSet<PromoCode> PromoCodes { get; set; }
+
         public DbSet<Customer> Customers { get; set; }
 
         public DbSet<Order> Orders { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<PromoCode>().HasKey(_ => _.Code);
+        }
     }
 }

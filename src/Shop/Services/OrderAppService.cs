@@ -42,13 +42,16 @@ namespace Shop.Services
                 subtotal += product.Price * line.Quantity;
             }
 
-            var price = _pricingManager.Calculate(subtotal, customer.IsLoyaltyMember);
+            var promoPercentOff = 0;
+
+            var price = _pricingManager.Calculate(subtotal, promoPercentOff, customer.IsLoyaltyMember);
 
             var order = new Order
             {
                 Id = Guid.NewGuid(),
                 CustomerId = customer.Id,
                 Subtotal = price.Subtotal,
+                PromoDiscount = price.PromoDiscount,
                 LoyaltyDiscount = price.LoyaltyDiscount,
                 Total = price.Total,
                 Status = OrderStatus.AwaitingPayment
@@ -79,6 +82,7 @@ namespace Shop.Services
             {
                 Id = order.Id,
                 Subtotal = order.Subtotal,
+                PromoDiscount = order.PromoDiscount,
                 LoyaltyDiscount = order.LoyaltyDiscount,
                 Total = order.Total,
                 Status = order.Status

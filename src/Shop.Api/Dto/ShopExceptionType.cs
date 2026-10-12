@@ -4,6 +4,7 @@ namespace Shop.Api.Dto
     {
         UnknownCustomer,
         UnknownProduct,
+        UnknownPromoCode,
         UnknownOrder
     }
 }

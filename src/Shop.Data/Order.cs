@@ -11,6 +11,8 @@ namespace Shop.Data
 
         public decimal Subtotal { get; set; }
 
+        public decimal PromoDiscount { get; set; }
+
         public decimal LoyaltyDiscount { get; set; }
 
         public decimal Total { get; set; }

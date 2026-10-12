@@ -30,3 +30,26 @@ E5. A code the shop never issued (`NOSUCHCODE`): the order is rejected.
 
 The 50 cents between R1 and E1 is the ticket. No harness could have found them: both readings run
 cleanly through the real container and the real database. Only a person reading R1 could.
+
+## Red first
+
+Tests: [`OrderAppServiceTests.Place.cs`](../../tests/Shop.Tests/Orders/OrderAppServiceTests.Place.cs),
+written from E1–E5 while the promo code was already in the contract but not yet applied.
+
+Predicted before the run:
+
+- E1, E2, E4 fail on the discounts: no promo discount is applied yet.
+- E3 passes: a loyalty-only order is existing behavior.
+- E5 fails: nothing rejects an unknown code yet.
+
+Actual (the order tests only, trimmed):
+
+```
+Failed Place_ShouldPriceTheOrder_As_TheConfirmedExample(E1)  should be (10.00, 4.50, 85.50)  but was (0.0, 5.0, 95.0)
+Failed Place_ShouldPriceTheOrder_As_TheConfirmedExample(E2)  should be (10.00, 0.00, 90.00)  but was (0.0, 0.0, 100.0)
+Failed Place_ShouldPriceTheOrder_As_TheConfirmedExample(E4)  should be (2.00, 0.90, 17.09)   but was (0.0, 1.0, 18.99)
+Failed Place_ShouldRejectTheOrder_When_ThePromoCodeIsUnknown  should throw Shop.Api.Dto.ShopException  but did not
+Failed: 4, Passed: 1, Total: 5
+```
+
+Every test failed or passed as predicted, so each one tests the change.

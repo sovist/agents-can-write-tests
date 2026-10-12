@@ -36,6 +36,19 @@ namespace Shop.Tests.EntityFactory
             return await AddEntity(product);
         }
 
+        public async Task<PromoCode> CreatePromoCode(string code, int percentOff, Action<PromoCode> update = null)
+        {
+            var promoCode = new PromoCode
+            {
+                Code = code,
+                PercentOff = percentOff
+            };
+
+            update?.Invoke(promoCode);
+
+            return await AddEntity(promoCode);
+        }
+
         /// <summary>
         /// A customer who is not a loyalty member.
         /// </summary>
@@ -66,6 +79,7 @@ namespace Shop.Tests.EntityFactory
                 Id = Guid.NewGuid(),
                 CustomerId = customer.Id,
                 Subtotal = subtotal,
+                PromoDiscount = 0m,
                 LoyaltyDiscount = 0m,
                 Total = subtotal,
                 Status = OrderStatus.AwaitingPayment

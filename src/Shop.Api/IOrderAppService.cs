@@ -10,7 +10,7 @@ namespace Shop.Api
     public interface IOrderAppService : IApplicationService
     {
         /// <summary>
-        /// Prices and stores an order. Throws <see cref="ShopException"/> for an unknown customer or product.
+        /// Prices and stores an order. Throws <see cref="ShopException"/> for an unknown customer, product or promo code.
         /// </summary>
         Task<OrderDto> Place(PlaceOrderDto request);
 

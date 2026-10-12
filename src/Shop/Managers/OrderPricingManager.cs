@@ -6,7 +6,7 @@ namespace Shop.Managers
     {
         private const decimal LoyaltyRate = 0.05m;
 
-        public OrderPrice Calculate(decimal subtotal, bool isLoyaltyMember)
+        public OrderPrice Calculate(decimal subtotal, int promoPercentOff, bool isLoyaltyMember)
         {
             var loyaltyDiscount = isLoyaltyMember ? RoundToCents(subtotal * LoyaltyRate) : 0m;
 
