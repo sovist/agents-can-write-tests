@@ -30,14 +30,14 @@ namespace Shop.Tests.Orders
         {
             // Arrange:
             // A customer orders one product worth the subtotal, then looks at the order
-            await ShopFactory.CreatePromoCode("SPRING10", percentOff: 10);
+            await ShopFactory.CreatePromoCode(code: "SPRING10", percentOff: 10);
 
             var customer = await ShopFactory.CreateCustomer(_ => _.IsLoyaltyMember = isLoyaltyMember);
 
             var product = await ShopFactory.CreateProduct(subtotal);
 
             // Act
-            var placed = await Service.Place(new PlaceOrderDto
+            var orderPlaced = await Service.Place(new PlaceOrderDto
             {
                 CustomerId = customer.Id,
                 Lines = new List<OrderLineDto>
@@ -52,7 +52,7 @@ namespace Shop.Tests.Orders
             });
 
             // Assert
-            var order = await Service.Get(placed.Id);
+            var order = await Service.Get(orderPlaced.Id);
 
             (order.PromoDiscount, order.LoyaltyDiscount, order.Total).ShouldBe((promoDiscount, loyaltyDiscount, total), example);
         }
@@ -64,7 +64,7 @@ namespace Shop.Tests.Orders
             // Confirmed example E5: a code the shop never issued
             var customer = await ShopFactory.CreateCustomer(_ => _.IsLoyaltyMember = true);
 
-            var product = await ShopFactory.CreateProduct(100.00m);
+            var product = await ShopFactory.CreateProduct(price: 100.00m);
 
             // Act
             // Assert

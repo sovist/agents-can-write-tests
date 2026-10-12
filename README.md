@@ -12,7 +12,7 @@ rule:
 | | How the test checks the code against itself | The rule that stops it |
 |---|---|---|
 | **Mock tautology** | The test stubs a collaborator, then asserts what it told the stub to return. | **1. A test tells a user story.** A harness that boots the real container and database, and hands out only application services, makes that the cheapest test to write. |
-| **Interpretation tautology** | The expected value comes from the same reading of the ticket that produced the code. | **2. Expected values come from outside the agent.** Examples a person confirmed, and payloads from the other system's documentation. |
+| **Interpretation tautology** | The expected value comes from the same reading of the ticket that produced the code. | **2. Someone other than the agent decides the right answer.** A person confirms worked examples, and the other system's documentation defines its payloads. |
 
 Neither rule is enough on its own. The harness can't tell whether the agent read the ticket right.
 And a confirmed value asserted against a mock only checks the mock. This repo is a small, runnable
@@ -30,9 +30,9 @@ public async Task Handle_ShouldMarkTheOrderPaid_When_ThePaymentSucceeded()
 {
     // Arrange:
     // A customer places an 85.50 order and pays. ExamplePay reports the amount in cents
-    var placed = await ShopFactory.CreateOrder(85.50m);
+    var orderPlaced = await ShopFactory.CreateOrder(subtotal: 85.50m);
 
-    var payload = ProviderPayload.PaymentSucceeded(placed.Id);
+    var payload = ProviderPayload.PaymentSucceeded(orderPlaced.Id);
 
     // Act
     var outcome = await Service.Handle(payload);
@@ -40,7 +40,7 @@ public async Task Handle_ShouldMarkTheOrderPaid_When_ThePaymentSucceeded()
     // Assert
     outcome.ShouldBe(WebhookOutcome.Applied);
 
-    var order = await OrderService.Get(placed.Id);
+    var order = await OrderService.Get(orderPlaced.Id);
 
     order.Status.ShouldBe(OrderStatus.Paid);
 }
@@ -51,7 +51,7 @@ shortcuts around it:
 
 | Rule | How |
 |---|---|
-| Tests reach only application services | `Resolve<T>() where T : class, IApplicationService` in [`TestBase`](tests/Shop.Tests.Base/TestBase.cs) |
+| Tests reach only application services | `Resolve<T>() where T : IApplicationService` in [`TestBase`](tests/Shop.Tests.Base/TestBase.cs) |
 | Nothing behind them is reachable | Contracts, data and implementations are separate projects. `Shop.Api` holds the service interfaces and, in `Dto/`, what they exchange. `Shop.Data` holds the entities and the database context. `Shop` holds the internal services and managers. [`PublicSurfaceTests`](tests/Shop.Tests/Boundaries/PublicSurfaceTests.cs) fails if `Shop` exports anything but its composition root or opens its internals, or if `Shop.Api` or `Shop.Data` export anything else |
 | The container is the production one | `TestBase` boots `AddShop`, the composition root a host calls |
 | Reads come from the database | Each `Resolve<T>()` opens a new scope, as a new request would. The database is SQLite in-memory, not EF Core's InMemory provider, which is not relational |
@@ -60,7 +60,7 @@ shortcuts around it:
 The type constraint on `Resolve<T>()` is where "only application services" stops being a convention
 and becomes a compile error.
 
-## Rule 2: expected values come from outside the agent
+## Rule 2: someone other than the agent decides the right answer
 
 The tickets are illustrations, and so is their product owner. The test runs they quote are real. The
 history shows them too: each ticket has a red commit and a green one, and checking out the red commit
@@ -123,6 +123,7 @@ src/Shop.Data/                   Entities and the database context. In tests, on
 src/Shop/                        Internal implementations (Services/) and rules (Managers/)
 tests/Shop.Tests.Base/           The harness: TestBase, ShopFactory, ShouldlyExtensions, ResourceHelper
 tests/Shop.Tests/                The tests, the provider's payload fixtures
+tests/Shop.Tests/TestBase.cs     This project's TestBase: the harness, plus helpers only these tests need
 tests/Shop.Tests/Boundaries/     Public surface and fixture provenance checks
 tests/Shop.Tests/EntityFactory/  Checks the factory against the API
 Imports.Tests.cs                 Global usings, linked into both test projects

@@ -26,7 +26,7 @@ index ae87bd6..d3bda4f 100644
              {
 diff --git a/tests/Shop.Tests/Orders/OrderAppServiceTests.Stacking.cs b/tests/Shop.Tests/Orders/OrderAppServiceTests.Stacking.cs
 new file mode 100644
-index 0000000..ae04537
+index 0000000..54874bf
 --- /dev/null
 +++ b/tests/Shop.Tests/Orders/OrderAppServiceTests.Stacking.cs
 @@ -0,0 +1,39 @@
@@ -41,14 +41,14 @@ index 0000000..ae04537
 +        {
 +            // Arrange:
 +            // A loyalty member orders 100.00 with a 10% promo code: 10% + 5% = 15% off
-+            await ShopFactory.CreatePromoCode("SPRING10", percentOff: 10);
++            await ShopFactory.CreatePromoCode(code: "SPRING10", percentOff: 10);
 +
 +            var customer = await ShopFactory.CreateCustomer(_ => _.IsLoyaltyMember = true);
 +
-+            var product = await ShopFactory.CreateProduct(100.00m);
++            var product = await ShopFactory.CreateProduct(price: 100.00m);
 +
 +            // Act
-+            var placed = await Service.Place(new PlaceOrderDto
++            var orderPlaced = await Service.Place(new PlaceOrderDto
 +            {
 +                CustomerId = customer.Id,
 +                Lines = new List<OrderLineDto>
@@ -63,7 +63,7 @@ index 0000000..ae04537
 +            });
 +
 +            // Assert
-+            var order = await Service.Get(placed.Id);
++            var order = await Service.Get(orderPlaced.Id);
 +
 +            order.Total.ShouldBe(85.00m);
 +        }

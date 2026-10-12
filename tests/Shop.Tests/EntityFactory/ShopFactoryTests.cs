@@ -1,6 +1,5 @@
 using Shop.Api;
 using Shop.Api.Dto;
-using Shop.Tests.Base;
 
 namespace Shop.Tests.EntityFactory
 {
@@ -17,13 +16,13 @@ namespace Shop.Tests.EntityFactory
         {
             // Arrange:
             // The same order twice: written by the factory, and placed by a customer through the API
-            var order = await ShopFactory.CreateOrder(85.50m);
+            var orderCreated = await ShopFactory.CreateOrder(subtotal: 85.50m);
 
             var customer = await ShopFactory.CreateCustomer();
 
-            var product = await ShopFactory.CreateProduct(85.50m);
+            var product = await ShopFactory.CreateProduct(price: 85.50m);
 
-            var placed = await OrderService.Place(new PlaceOrderDto
+            var orderPlaced = await OrderService.Place(new PlaceOrderDto
             {
                 CustomerId = customer.Id,
                 Lines = new List<OrderLineDto>
@@ -37,9 +36,9 @@ namespace Shop.Tests.EntityFactory
             });
 
             // Act
-            var fromFactory = await OrderService.Get(order.Id);
+            var fromFactory = await OrderService.Get(orderCreated.Id);
 
-            var fromApi = await OrderService.Get(placed.Id);
+            var fromApi = await OrderService.Get(orderPlaced.Id);
 
             // Assert
             (fromFactory.Subtotal, fromFactory.PromoDiscount, fromFactory.LoyaltyDiscount, fromFactory.Total, fromFactory.Status)

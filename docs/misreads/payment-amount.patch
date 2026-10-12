@@ -1,5 +1,5 @@
 diff --git a/src/Shop/Services/PaymentWebhookAppService.cs b/src/Shop/Services/PaymentWebhookAppService.cs
-index 953be7e..1de52d3 100644
+index 54ab3e5..243296b 100644
 --- a/src/Shop/Services/PaymentWebhookAppService.cs
 +++ b/src/Shop/Services/PaymentWebhookAppService.cs
 @@ -49,8 +49,7 @@ namespace Shop.Services
@@ -56,7 +56,7 @@ index 0000000..fda4955
 \ No newline at end of file
 diff --git a/tests/Shop.Tests/Payments/PaymentWebhookAppServiceTests.Sample.cs b/tests/Shop.Tests/Payments/PaymentWebhookAppServiceTests.Sample.cs
 new file mode 100644
-index 0000000..c75acbe
+index 0000000..8f0bf21
 --- /dev/null
 +++ b/tests/Shop.Tests/Payments/PaymentWebhookAppServiceTests.Sample.cs
 @@ -0,0 +1,28 @@
@@ -72,9 +72,9 @@ index 0000000..c75acbe
 +        {
 +            // Arrange:
 +            // A customer pays an 85.50 order. ExamplePay confirms the payment
-+            var placed = await ShopFactory.CreateOrder(85.50m);
++            var orderPlaced = await ShopFactory.CreateOrder(subtotal: 85.50m);
 +
-+            var payload = ProviderPayload.SamplePayment(placed.Id);
++            var payload = ProviderPayload.SamplePayment(orderPlaced.Id);
 +
 +            // Act
 +            var outcome = await Service.Handle(payload);
@@ -82,7 +82,7 @@ index 0000000..c75acbe
 +            // Assert
 +            outcome.ShouldBe(WebhookOutcome.Applied);
 +
-+            var order = await OrderService.Get(placed.Id);
++            var order = await OrderService.Get(orderPlaced.Id);
 +
 +            order.Status.ShouldBe(OrderStatus.Paid);
 +        }

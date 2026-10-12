@@ -20,6 +20,11 @@ code agrees with your reading.
   `// Act` and `// Assert`. Keep the markers even when a section is one line.
 - Name the test `Method_ShouldResult_When_Condition`. For an application service, put it in the
   partial file of the method it acts on: `OrderAppServiceTests.Place.cs` for `Place`.
+- Name what a step produces after the thing and what happened to it: `orderPlaced`, `orderCreated`.
+  A bare `placed` or `result` makes the reader look back to find out what it is.
+- Pass a literal value with its parameter name: `ShopFactory.CreateOrder(subtotal: 85.50m)`,
+  `ShopFactory.CreatePromoCode(code: "SPRING10", percentOff: 10)`. The call then reads as part of the
+  story, without opening the method.
 - Assert what a user can observe: what the service returns, or what a later read through a service
   shows. Never assert which method was called, or with what.
 - No mocks of the application's own code: no stubbed service, manager or database. If a test seems to
@@ -28,13 +33,14 @@ code agrees with your reading.
 
 ### Go through the harness
 
-- Inherit `TestBase`. Get services only with `Resolve<T>()`; it accepts application services and
-  nothing else.
+- Inherit this project's `TestBase`. It derives from the harness in `Shop.Tests.Base`, and holds
+  helpers only this project's tests need. Get services only with `Resolve<T>()`; it accepts
+  application services and nothing else.
 - Create test data with `ShopFactory.Create...` by default. Never write rows yourself. If the factory
   lacks what you need, add a `Create...` method to it.
 - When the data is something the application derives from other data, such as an order with
   discounts, create it through the API instead, so the application computes it. If several tests need
-  it, give it a named helper on the test base rather than repeating the calls.
+  it, give it a named helper on this project's `TestBase` rather than repeating the calls.
 - A `Create...` method takes the values a test is about as parameters, and anything else through its
   `update` delegate. Use `update` only for fields the test is about, never for values the application
   computes, such as totals.
@@ -59,11 +65,15 @@ other than the code under test:
 If you got the value by reading the implementation, or by running it and copying the output, the
 test checks the code against itself. Find the real source, or ask.
 
-### Before any code, restate the ticket as numbers
+### Before any code, restate what the ticket leaves open as numbers
 
-1. Under `## Restatement` in the ticket file, restate the ticket as worked examples with concrete
-   inputs and outputs. Prose like "both discounts apply" hides the question that matters; "100.00
-   becomes 85.00" exposes it.
+If the ticket already gives concrete examples, they are the confirmed examples: copy them under
+`## Confirmed examples` and go on. Stop for a person only where the ticket leaves the answer open,
+because that is where you would otherwise guess.
+
+1. Under `## Restatement` in the ticket file, restate the open part of the ticket as worked examples
+   with concrete inputs and outputs. Prose like "both discounts apply" hides the question that
+   matters; "100.00 becomes 85.00" exposes it.
 2. Stop, and ask a person to confirm or correct the examples. Do not start the implementation
    until they have answered.
 3. Their answer goes under `## Confirmed examples`. Tests copy those values exactly, and cite the

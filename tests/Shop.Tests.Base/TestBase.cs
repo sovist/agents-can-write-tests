@@ -50,7 +50,7 @@ namespace Shop.Tests.Base
         /// for the service provider, a database context, or anything else that is not an entry point.
         /// </summary>
         protected T Resolve<T>()
-            where T : class, IApplicationService
+            where T : IApplicationService
         {
             var scope = _serviceProvider.CreateScope();
 

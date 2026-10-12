@@ -1,5 +1,4 @@
 using Shop.Api;
-using Shop.Tests.Base;
 
 namespace Shop.Tests.Orders
 {
