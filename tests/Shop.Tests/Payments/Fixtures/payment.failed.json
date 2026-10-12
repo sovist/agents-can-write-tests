@@ -1,0 +1,12 @@
+{
+  "id": "evt_9Lw4PcD8",
+  "type": "payment.failed",
+  "created_at": "2026-10-12T09:43:52Z",
+  "data": {
+    "payment_id": "pay_6Vb1QsE5",
+    "reference": "c0a8012e-5b1c-4c7e-9a43-2f6d8e1b7a90",
+    "amount": 8550,
+    "currency": "EUR",
+    "failure_code": "card_declined"
+  }
+}

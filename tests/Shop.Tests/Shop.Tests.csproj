@@ -22,4 +22,9 @@
     <ProjectReference Include="../Shop.Tests.Base/Shop.Tests.Base.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Payments\Fixtures\payment.failed.json" />
+    <EmbeddedResource Include="Payments\Fixtures\payment.succeeded.json" />
+  </ItemGroup>
+
 </Project>

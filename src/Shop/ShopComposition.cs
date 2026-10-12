@@ -26,6 +26,7 @@ namespace Shop
             services.AddScoped<ICatalogAppService, CatalogAppService>();
             services.AddScoped<ICustomerAppService, CustomerAppService>();
             services.AddScoped<IOrderAppService, OrderAppService>();
+            services.AddScoped<IPaymentWebhookAppService, PaymentWebhookAppService>();
 
             return services;
         }

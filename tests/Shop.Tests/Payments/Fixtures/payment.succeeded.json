@@ -1,0 +1,11 @@
+{
+  "id": "evt_7Hq2KxN4",
+  "type": "payment.succeeded",
+  "created_at": "2026-10-12T09:41:07Z",
+  "data": {
+    "payment_id": "pay_3Fm9TzR1",
+    "reference": "c0a8012e-5b1c-4c7e-9a43-2f6d8e1b7a90",
+    "amount": 8550,
+    "currency": "EUR"
+  }
+}

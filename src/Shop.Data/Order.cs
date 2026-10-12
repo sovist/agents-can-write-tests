@@ -18,5 +18,7 @@ namespace Shop.Data
         public decimal Total { get; set; }
 
         public OrderStatus Status { get; set; }
+
+        public string PaymentId { get; set; }
     }
 }
