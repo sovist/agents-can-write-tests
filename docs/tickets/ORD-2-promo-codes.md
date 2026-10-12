@@ -29,7 +29,8 @@ code, 100.00 → 90.00 → **85.50**. Each discount is rounded to cents, half aw
 E5. A code the shop never issued (`NOSUCHCODE`): the order is rejected.
 
 The 50 cents between R1 and E1 is the ticket. No harness could have found them: both readings run
-cleanly through the real container and the real database. Only a person reading R1 could.
+cleanly through the real container and the real database. Only a person reading R1 could. See
+[`docs/misreads/promo-and-loyalty.patch`](../misreads/promo-and-loyalty.patch).
 
 ## Red first
 

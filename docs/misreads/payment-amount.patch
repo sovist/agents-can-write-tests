@@ -1,0 +1,104 @@
+diff --git a/src/Shop/Services/PaymentWebhookAppService.cs b/src/Shop/Services/PaymentWebhookAppService.cs
+index 953be7e..1de52d3 100644
+--- a/src/Shop/Services/PaymentWebhookAppService.cs
++++ b/src/Shop/Services/PaymentWebhookAppService.cs
+@@ -49,8 +49,7 @@ namespace Shop.Services
+                 return WebhookOutcome.Ignored;
+             }
+ 
+-            // ExamplePay sends amounts in the currency's minor unit: 85.50 EUR arrives as 8550.
+-            if (payment.Data.Currency != ShopCurrency || payment.Data.Amount != order.Total * 100)
++            if (payment.Data.Currency != ShopCurrency || payment.Data.Amount != order.Total)
+             {
+                 return WebhookOutcome.Rejected;
+             }
+@@ -78,7 +77,7 @@ namespace Shop.Services
+ 
+             public string Reference { get; set; }
+ 
+-            public long Amount { get; set; }
++            public decimal Amount { get; set; }
+ 
+             public string Currency { get; set; }
+         }
+diff --git a/tests/Shop.Tests/Payments/Fixtures/ProviderPayload.cs b/tests/Shop.Tests/Payments/Fixtures/ProviderPayload.cs
+index e6219f1..410f712 100644
+--- a/tests/Shop.Tests/Payments/Fixtures/ProviderPayload.cs
++++ b/tests/Shop.Tests/Payments/Fixtures/ProviderPayload.cs
+@@ -25,6 +25,11 @@ namespace Shop.Tests.Payments.Fixtures
+             return Load("payment.failed.json", reference);
+         }
+ 
++        public static string SamplePayment(Guid reference)
++        {
++            return Load("sample-payment.json", reference);
++        }
++
+         private static string Load(string fixture, Guid reference)
+         {
+             var payload = JsonNode.Parse(typeof(ProviderPayload).GetResourceFileContent(fixture));
+diff --git a/tests/Shop.Tests/Payments/Fixtures/sample-payment.json b/tests/Shop.Tests/Payments/Fixtures/sample-payment.json
+new file mode 100644
+index 0000000..fda4955
+--- /dev/null
++++ b/tests/Shop.Tests/Payments/Fixtures/sample-payment.json
+@@ -0,0 +1,10 @@
++{
++  "id": "evt_test_1",
++  "type": "payment.succeeded",
++  "data": {
++    "payment_id": "pay_test_1",
++    "reference": "00000000-0000-0000-0000-000000000000",
++    "amount": 85.50,
++    "currency": "EUR"
++  }
++}
+\ No newline at end of file
+diff --git a/tests/Shop.Tests/Payments/PaymentWebhookAppServiceTests.Sample.cs b/tests/Shop.Tests/Payments/PaymentWebhookAppServiceTests.Sample.cs
+new file mode 100644
+index 0000000..c75acbe
+--- /dev/null
++++ b/tests/Shop.Tests/Payments/PaymentWebhookAppServiceTests.Sample.cs
+@@ -0,0 +1,28 @@
++using Shop.Api.Dto;
++using Shop.Tests.Payments.Fixtures;
++
++namespace Shop.Tests.Payments
++{
++    public partial class PaymentWebhookAppServiceTests
++    {
++        [Fact]
++        public async Task Handle_ShouldMarkTheOrderPaid_When_ExamplePayConfirmsThePayment()
++        {
++            // Arrange:
++            // A customer pays an 85.50 order. ExamplePay confirms the payment
++            var placed = await ShopFactory.CreateOrder(85.50m);
++
++            var payload = ProviderPayload.SamplePayment(placed.Id);
++
++            // Act
++            var outcome = await Service.Handle(payload);
++
++            // Assert
++            outcome.ShouldBe(WebhookOutcome.Applied);
++
++            var order = await OrderService.Get(placed.Id);
++
++            order.Status.ShouldBe(OrderStatus.Paid);
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/tests/Shop.Tests/Shop.Tests.csproj b/tests/Shop.Tests/Shop.Tests.csproj
+index 3100d5c..388db04 100644
+--- a/tests/Shop.Tests/Shop.Tests.csproj
++++ b/tests/Shop.Tests/Shop.Tests.csproj
+@@ -25,6 +25,7 @@
+   <ItemGroup>
+     <EmbeddedResource Include="Payments\Fixtures\payment.failed.json" />
+     <EmbeddedResource Include="Payments\Fixtures\payment.succeeded.json" />
++    <EmbeddedResource Include="Payments\Fixtures\sample-payment.json" />
+   </ItemGroup>
+ 
+ </Project>
+\ No newline at end of file

@@ -21,3 +21,31 @@ jobs:
       - run: dotnet build --no-restore --configuration Release -warnaserror
 
       - run: dotnet test --no-build --configuration Release
+
+  # Each patch is a plausible misread. What is checked: the test the agent writes from its own
+  # reading passes against it, and the tests whose expected values come from outside the agent fail.
+  misreads:
+    name: misread (${{ matrix.patch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - patch: docs/misreads/promo-and-loyalty.patch
+            agent-test: Place_ShouldApplyBothDiscounts_When_ALoyaltyMemberUsesAPromoCode
+            catchers: Place_ShouldPriceTheOrder_As_TheConfirmedExample
+          - patch: docs/misreads/payment-amount.patch
+            agent-test: Handle_ShouldMarkTheOrderPaid_When_ExamplePayConfirmsThePayment
+            catchers: >-
+              Handle_ShouldMarkTheOrderPaid_When_ThePaymentSucceeded
+              Fixtures_ShouldBeExamplesFromTheProviderDocs
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - run: dotnet restore
+
+      - run: bash .github/misread.sh ${{ matrix.patch }} ${{ matrix.agent-test }} ${{ matrix.catchers }}

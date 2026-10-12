@@ -1,0 +1,72 @@
+diff --git a/src/Shop/Managers/IOrderPricingManager.cs b/src/Shop/Managers/IOrderPricingManager.cs
+index 1838dc5..bf51598 100644
+--- a/src/Shop/Managers/IOrderPricingManager.cs
++++ b/src/Shop/Managers/IOrderPricingManager.cs
+@@ -1,7 +1,7 @@
+ namespace Shop.Managers
+ {
+     /// <summary>
+-    /// Order pricing. The promo code comes off the subtotal, and the loyalty discount (5% for loyalty members) comes off what remains.
++    /// Order pricing. Both discounts come off the subtotal and add up: the promo code's percentage, and 5% for loyalty members.
+     /// Each discount is rounded to cents, half away from zero.
+     /// </summary>
+     internal interface IOrderPricingManager
+diff --git a/src/Shop/Managers/OrderPricingManager.cs b/src/Shop/Managers/OrderPricingManager.cs
+index ae87bd6..d3bda4f 100644
+--- a/src/Shop/Managers/OrderPricingManager.cs
++++ b/src/Shop/Managers/OrderPricingManager.cs
+@@ -10,7 +10,7 @@ namespace Shop.Managers
+         {
+             var promoDiscount = RoundToCents(subtotal * promoPercentOff / 100);
+ 
+-            var loyaltyDiscount = isLoyaltyMember ? RoundToCents((subtotal - promoDiscount) * LoyaltyRate) : 0m;
++            var loyaltyDiscount = isLoyaltyMember ? RoundToCents(subtotal * LoyaltyRate) : 0m;
+ 
+             return new OrderPrice
+             {
+diff --git a/tests/Shop.Tests/Orders/OrderAppServiceTests.Stacking.cs b/tests/Shop.Tests/Orders/OrderAppServiceTests.Stacking.cs
+new file mode 100644
+index 0000000..ae04537
+--- /dev/null
++++ b/tests/Shop.Tests/Orders/OrderAppServiceTests.Stacking.cs
+@@ -0,0 +1,39 @@
++using Shop.Api.Dto;
++
++namespace Shop.Tests.Orders
++{
++    public partial class OrderAppServiceTests
++    {
++        [Fact]
++        public async Task Place_ShouldApplyBothDiscounts_When_ALoyaltyMemberUsesAPromoCode()
++        {
++            // Arrange:
++            // A loyalty member orders 100.00 with a 10% promo code: 10% + 5% = 15% off
++            await ShopFactory.CreatePromoCode("SPRING10", percentOff: 10);
++
++            var customer = await ShopFactory.CreateCustomer(_ => _.IsLoyaltyMember = true);
++
++            var product = await ShopFactory.CreateProduct(100.00m);
++
++            // Act
++            var placed = await Service.Place(new PlaceOrderDto
++            {
++                CustomerId = customer.Id,
++                Lines = new List<OrderLineDto>
++                {
++                    new OrderLineDto
++                    {
++                        ProductId = product.Id,
++                        Quantity = 1
++                    }
++                },
++                PromoCode = "SPRING10"
++            });
++
++            // Assert
++            var order = await Service.Get(placed.Id);
++
++            order.Total.ShouldBe(85.00m);
++        }
++    }
++}
+\ No newline at end of file

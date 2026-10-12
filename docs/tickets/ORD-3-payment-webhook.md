@@ -44,3 +44,7 @@ Failed Handle_ShouldRejectThePayment_When_TheAmountDiffersFromTheOrderTotal outc
 Failed Handle_ShouldApplyThePaymentOnce_When_TheEventIsDeliveredTwice     status should be Paid but was AwaitingPayment
 Failed: 3, Passed: 1, Total: 4
 ```
+
+What the provider's examples protect against is in
+[`docs/misreads/payment-amount.patch`](../misreads/payment-amount.patch): a parser that reads
+`amount` as euros, with a sample payload written to match it.
