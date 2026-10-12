@@ -8,13 +8,16 @@ namespace Shop.Managers
 
         public OrderPrice Calculate(decimal subtotal, int promoPercentOff, bool isLoyaltyMember)
         {
-            var loyaltyDiscount = isLoyaltyMember ? RoundToCents(subtotal * LoyaltyRate) : 0m;
+            var promoDiscount = RoundToCents(subtotal * promoPercentOff / 100);
+
+            var loyaltyDiscount = isLoyaltyMember ? RoundToCents((subtotal - promoDiscount) * LoyaltyRate) : 0m;
 
             return new OrderPrice
             {
                 Subtotal = subtotal,
+                PromoDiscount = promoDiscount,
                 LoyaltyDiscount = loyaltyDiscount,
-                Total = subtotal - loyaltyDiscount
+                Total = subtotal - promoDiscount - loyaltyDiscount
             };
         }
 

@@ -52,4 +52,5 @@ Failed Place_ShouldRejectTheOrder_When_ThePromoCodeIsUnknown  should throw Shop.
 Failed: 4, Passed: 1, Total: 5
 ```
 
-Every test failed or passed as predicted, so each one tests the change.
+Every test failed or passed as predicted, so each one tests the change. Then the implementation went
+in, and all of them passed.

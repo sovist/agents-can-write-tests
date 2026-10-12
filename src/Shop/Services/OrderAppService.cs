@@ -44,6 +44,18 @@ namespace Shop.Services
 
             var promoPercentOff = 0;
 
+            if (request.PromoCode != null)
+            {
+                var promoCode = await _dbContext.PromoCodes.FindAsync(request.PromoCode);
+
+                if (promoCode == null)
+                {
+                    throw new ShopException(ShopExceptionType.UnknownPromoCode);
+                }
+
+                promoPercentOff = promoCode.PercentOff;
+            }
+
             var price = _pricingManager.Calculate(subtotal, promoPercentOff, customer.IsLoyaltyMember);
 
             var order = new Order
